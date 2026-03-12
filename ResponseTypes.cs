@@ -41,6 +41,18 @@ namespace GMOO.SDK.ResponseTypes
     public class Account : GMOOBaseResponseType
     {
         /// <summary>
+        /// Gets or sets the user's first name.
+        /// </summary>
+        [JsonPropertyName("firstName")]
+        public string FirstName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the user's last name.
+        /// </summary>
+        [JsonPropertyName("lastName")]
+        public string LastName { get; set; }
+
+        /// <summary>
         /// Gets or sets the company name.
         /// </summary>
         [JsonPropertyName("company")]
