@@ -109,6 +109,20 @@ namespace GMOO.SDK
         }
 
         /// <summary>
+        /// Gets a specific model.
+        /// </summary>
+        /// <param name="modelId">The model ID to retrieve.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The requested model.</returns>
+        public async Task<Model> GetModelAsync(int modelId, CancellationToken cancellationToken = default)
+        {
+            if (modelId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(modelId), "Model ID must be greater than zero.");
+
+            return await GetAsync<Model>($"models/{modelId}", cancellationToken);
+        }
+
+        /// <summary>
         /// Creates a new model.
         /// </summary>
         /// <param name="name">The model name.</param>
@@ -165,8 +179,8 @@ namespace GMOO.SDK
             if (string.IsNullOrWhiteSpace(name) || name.Trim().Length < 4)
                 throw new ArgumentException("Project name must be at least 4 characters long.", nameof(name));
 
-            if (inputCount <= 0)
-                throw new ArgumentOutOfRangeException(nameof(inputCount), "Input count must be greater than zero.");
+            if (inputCount < 2 || inputCount > 200)
+                throw new ArgumentOutOfRangeException(nameof(inputCount), "Input count must be between 2 and 200.");
 
             if (minimums == null)
                 throw new ArgumentNullException(nameof(minimums));
@@ -266,17 +280,17 @@ namespace GMOO.SDK
         #region Trial Operations
 
         /// <summary>
-        /// Gets a specific trial.
+        /// Gets a specific objective.
         /// </summary>
-        /// <param name="trialId">The trial ID to retrieve.</param>
+        /// <param name="objectiveId">The objective ID to retrieve.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
-        /// <returns>The requested trial.</returns>
-        public async Task<Trial> GetTrialAsync(int trialId, CancellationToken cancellationToken = default)
+        /// <returns>The requested objective.</returns>
+        public async Task<Objective> GetObjectiveAsync(int objectiveId, CancellationToken cancellationToken = default)
         {
-            if (trialId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(trialId), "Trial ID must be greater than zero.");
+            if (objectiveId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(objectiveId), "Objective ID must be greater than zero.");
 
-            return await GetAsync<Trial>($"trials/{trialId}", cancellationToken);
+            return await GetAsync<Objective>($"objectives/{objectiveId}", cancellationToken);
         }
 
         /// <summary>
@@ -410,26 +424,33 @@ namespace GMOO.SDK
         /// <summary>
         /// Registers a new account.
         /// </summary>
+        /// <param name="firstName">User's first name.</param>
+        /// <param name="lastName">User's last name.</param>
         /// <param name="company">Company name.</param>
-        /// <param name="name">User's name.</param>
         /// <param name="email">User's email.</param>
         /// <param name="password">User's password.</param>
         /// <param name="timeZone">User's time zone.</param>
+        /// <param name="agreement">Whether the user agrees to the terms (default: true).</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The created account.</returns>
         public async Task<Account> RegisterAccountAsync(
+            string firstName,
+            string lastName,
             string company,
-            string name,
             string email,
             string password,
             string timeZone,
+            bool agreement = true,
             CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrWhiteSpace(firstName))
+                throw new ArgumentException("First name cannot be empty.", nameof(firstName));
+
+            if (string.IsNullOrWhiteSpace(lastName))
+                throw new ArgumentException("Last name cannot be empty.", nameof(lastName));
+
             if (string.IsNullOrWhiteSpace(company))
                 throw new ArgumentException("Company name cannot be empty.", nameof(company));
-
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name cannot be empty.", nameof(name));
 
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email cannot be empty.", nameof(email));
@@ -442,11 +463,13 @@ namespace GMOO.SDK
 
             var request = new
             {
+                firstName,
+                lastName,
                 company,
-                name,
                 email,
                 password,
-                timeZone
+                timeZone,
+                agreement
             };
 
             return await PostAsync<Account>("accounts/register", request, cancellationToken);
